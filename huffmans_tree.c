@@ -20,28 +20,28 @@ void print (P_queue *P) {//apenas para debug
    printf("\n");
 }
 
-void max_heapify (P_queue *P, int i) {
+void min_heapify (P_queue *P, int i) {
    if(!P) return;
    int left = 2*i + 1, right = left + 1;
-   int largest = i;
-   if(left < P->size && V[left]->freq > V[largest]->freq)
-      largest = left;
-   if(right < P->size && V[right]->freq > V[largest]->freq)
-      largest = right;
-   if(largest != i){
-      swap(V, largest, i);
-      max_heapify(V, P->size, largest);
+   int smallest = i;
+   if(left < P->size && V[left]->freq < V[smallest]->freq)
+      smallest = left;
+   if(right < P->size && V[right]->freq < V[smallest]->freq)
+      smallest = right;
+   if(smallest != i){
+      swap(V, smallest, i);
+      min_heapify(V, P->size, smallest);
    }
 }
 
-void build_max_heap (P_queue *P) {
+/*void build_min_heap (P_queue *P) {
    if(!P) return;
    for(int i = P->size/2; i >= 0; i--){
-      max_heapify(V, P->size, i);
+      min_heapify(V, P->size, i);
    }
-}
+}*/
 
-void insert (P_queue *P, Node *element){
+void insert (P_queue *P, Node *element) {
    if(!P || !element) return;
 
    int aux = P->size;
@@ -52,4 +52,18 @@ void insert (P_queue *P, Node *element){
    P->V[aux] = element;
 
    P->size += 1;
+}
+
+Node *extract_min (P_queue *P) {
+   if(!P) return;
+   if(P->size == 0){
+      printf("Erro: Fila está vazia!");
+      exit(1);
+   }
+   Node *aux = P->V[0];
+   P->V[0] = P->V[P->size - 1];
+   P->size -= 1;
+   min_heapify(P);
+
+   return aux;
 }
