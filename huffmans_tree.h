@@ -17,7 +17,7 @@ typedef struct priority_queue{
 	int size;
 	Node *V[ALPHABET];
 }P_queue;
-P_queue* new_pqueue(P_queue *P){P->size = 0}; //initializes the priority queue
+P_queue* new_pqueue(P_queue *P){P->size = 0;} //initializes the priority queue
 int parent (int i); //returns the parent of a node
 void swap (P_queue *P, int a, int b); //swaps the values of two nodes
 void print (P_queue *P); //apenas para debug

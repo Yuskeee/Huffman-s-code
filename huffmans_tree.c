@@ -6,7 +6,7 @@ int parent (int i) {
 
 void swap (P_queue *P, int a, int b) {
    if(!P) return;
-   int aux = P->V[a];
+   Node *aux = P->V[a];
    P->V[a] = P->V[b];
    P->V[b] = aux;
 }
@@ -24,13 +24,13 @@ void min_heapify (P_queue *P, int i) {
    if(!P) return;
    int left = 2*i + 1, right = left + 1;
    int smallest = i;
-   if(left < P->size && V[left]->freq < V[smallest]->freq)
+   if(left < P->size && P->V[left]->freq < P->V[smallest]->freq)
       smallest = left;
-   if(right < P->size && V[right]->freq < V[smallest]->freq)
+   if(right < P->size && P->V[right]->freq < P->V[smallest]->freq)
       smallest = right;
    if(smallest != i){
-      swap(V, smallest, i);
-      min_heapify(V, P->size, smallest);
+      swap(P, smallest, i);
+      min_heapify(P, smallest);
    }
 }
 
@@ -55,7 +55,7 @@ void insert (P_queue *P, Node *element) {
 }
 
 Node *extract_min (P_queue *P) {
-   if(!P) return;
+   if(!P) return NULL;
    if(P->size == 0){
       printf("Erro: Fila está vazia!");
       exit(1);
@@ -63,7 +63,7 @@ Node *extract_min (P_queue *P) {
    Node *aux = P->V[0];
    P->V[0] = P->V[P->size - 1];
    P->size -= 1;
-   min_heapify(P);
+   min_heapify(P, 0);
 
    return aux;
 }
