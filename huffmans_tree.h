@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define ALPHABET 256 //Alphabet ASCII
 
@@ -17,7 +18,7 @@ typedef struct priority_queue{
 	int size;
 	Node *V[ALPHABET];
 }P_queue;
-P_queue* new_pqueue(P_queue *P){P->size = 0;} //initializes the priority queue
+void new_pqueue(P_queue *P);//initializes the priority queue
 int parent (int i); //returns the parent of a node
 void swap (P_queue *P, int a, int b); //swaps the values of two nodes
 void print (P_queue *P); //apenas para debug
@@ -25,5 +26,6 @@ void min_heapify (P_queue *P, int i); //fix the heap
 // void build_min_heap (P_queue *P); //builds the min heap
 void insert (P_queue *P, Node *element); //inserts an element
 Node *extract_min (P_queue *P); //returns the smallest element and removes from the queue
+void count_chars(char *file_name, P_queue *P); //fill frequencies of huffman node
 
 #endif

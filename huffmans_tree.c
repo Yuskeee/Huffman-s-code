@@ -1,5 +1,12 @@
 #include "huffmans_tree.h"
 
+void new_pqueue(P_queue *P){
+   P->size = 0;
+   for (int i = 0; i < ALPHABET; ++i){
+      P->V[i] = (Node*)malloc(sizeof(Node));
+   }
+}
+
 int parent (int i) {
    return (i - 1)/2; 
 }
@@ -15,7 +22,7 @@ void print (P_queue *P) {//apenas para debug
    if(!P) return;
    int i;
    for (i = 0; i < P->size; i++) {
-      printf("%d ", P->V[i]);
+      printf("%d ", P->V[i]->freq);
    }
    printf("\n");
 }
@@ -66,4 +73,33 @@ Node *extract_min (P_queue *P) {
    min_heapify(P, 0);
 
    return aux;
+}
+
+void count_chars(char *file_name, P_queue *P){
+   FILE *f = fopen(file_name, "r");
+   if (f == NULL)
+   {
+      printf("Error: couldn't open %s\n", file_name);
+      exit(1);
+   }    
+   // Read the file into a memory buffer
+   fseek(f, 0L, SEEK_END);
+   int fsize = ftell(f);
+   fseek(f, 0L, SEEK_SET);
+   unsigned char *buffer = malloc(fsize);
+   fread(buffer, fsize, 1, f);
+   fclose(f);
+   for(int i = 0; i < fsize; i++){
+      printf("%c", buffer[i]);
+   }
+   unsigned char *aux = calloc(ALPHABET, sizeof(char));
+   for(int i = 0; i < fsize; i++)
+   {
+      aux[buffer[i]]++;
+      P->V[buffer[i]]->freq = aux[buffer[i]];
+   }
+   for(int i = 0; i < 256; i++){
+      printf("%c: %d\n", i, aux[i]);
+   }
+   return;
 }
