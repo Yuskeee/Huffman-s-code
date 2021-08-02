@@ -1,10 +1,11 @@
 #include "huffmans_tree.h"
 
+
 void new_pqueue(P_queue *P){
    P->size = 0;
-   for (int i = 0; i < ALPHABET; ++i){
-      P->V[i] = (Node*)malloc(sizeof(Node));
-   }
+   // for (int i = 0; i < ALPHABET; ++i){
+   //    P->V[i] = (Node*)malloc(sizeof(Node));
+   // }
 }
 
 int parent (int i) {
@@ -75,10 +76,16 @@ Node *extract_min (P_queue *P) {
    return aux;
 }
 
+void insert_char(P_queue *P, char id, int freq){
+   Node *new_node = (Node*)malloc(sizeof(Node));
+   new_node->id = id;
+   new_node->freq = freq;
+   insert(P, new_node);
+}
+
 void count_chars(char *file_name, P_queue *P){
    FILE *f = fopen(file_name, "r");
-   if (f == NULL)
-   {
+   if (f == NULL){
       printf("Error: couldn't open %s\n", file_name);
       exit(1);
    }    
@@ -89,17 +96,56 @@ void count_chars(char *file_name, P_queue *P){
    unsigned char *buffer = malloc(fsize);
    fread(buffer, fsize, 1, f);
    fclose(f);
+   printf("%d\n", fsize);
    for(int i = 0; i < fsize; i++){
       printf("%c", buffer[i]);
    }
-   unsigned char *aux = calloc(ALPHABET, sizeof(char));
-   for(int i = 0; i < fsize; i++)
-   {
+   int *aux = calloc(ALPHABET, sizeof(int));
+   for(int i = 0; i < fsize; i++){
       aux[buffer[i]]++;
-      P->V[buffer[i]]->freq = aux[buffer[i]];
    }
-   for(int i = 0; i < 256; i++){
-      printf("%c: %d\n", i, aux[i]);
+   int sum = 0;
+   for (int i = 0; i < ALPHABET; ++i)
+   {
+      sum += aux[i];
+      //printf("%c: %d\n", i, aux[i]);
+   }
+   printf("%d\n", sum);
+   for (int i = 0; i < ALPHABET; ++i){
+      if (aux[i] != 0){
+         insert_char(P, i, aux[i]);
+      }
    }
    return;
 }
+
+Node *create_huff_tree(P_queue *P){
+   while(P->size != 1){
+      Node *left = extract_min(P), *right = extract_min(P);
+      Node *top = (Node*)malloc(sizeof(Node));
+      top->freq = left->freq + right->freq;
+      top->left = left;
+      top->right = right;
+      insert(P, top);
+   }
+   return(extract_min(P));
+}
+
+void codify(Node *root, int store[], int top){
+   if (root->left){
+      store[top] = 0;
+      codify(root->left, store, top+1);
+   }
+   if (root->right){
+      store[top] = 1;
+      codify(root->right, store, top+1);
+   }
+   if (!root->left && !root->right){
+      printf("%c: ", root->id);
+      for (int i = 0; i < top; ++i){
+         printf("%d\n", store[i]);
+      }
+   }
+}
+
+

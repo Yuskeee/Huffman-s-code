@@ -2,6 +2,7 @@
 
 int main(int argc, char const *argv[]){
 	char *file_name;
+	int store[];
 	if (argc != 2){
 		printf("Erro\n");//error
 		exit(1);
@@ -10,5 +11,7 @@ int main(int argc, char const *argv[]){
 	P_queue P;
 	new_pqueue(&P);
 	count_chars(file_name, &P);
+	codify(create_huff_tree(&P), );
+	print(&P);
 	return 0;
 }
