@@ -137,15 +137,15 @@ void freq_table (Node *root, char store[], char *table[],int top) {
    }
    if (!root->left && !root->right){
       store[top] = '\0';
-      printf("%c:", root->id);
-      printf("%s", store);
+      // printf("%c:", root->id);
+      // printf("%s", store);
       table[root->id] = strdup(store);
-      printf(" ");
+      // printf(" ");
    }
 }
 
-/*Global Variables to print bits*/
-int currbyte = 0, bitcount = 0;
+/*Global Variables to write/read bits*/
+int currbyte = 0, bitcount = 0, pos = 0;
 
 void write_bit (FILE *f, int bit) {
    currbyte = currbyte << 1;
@@ -167,7 +167,12 @@ void write_char (FILE *f, char c) {
 
 int read_bit (FILE *f) {
    if (bitcount == 0){
-      currbyte = fgetc(f);
+      fseek(f, 0L, SEEK_END);
+      int fsize = ftell(f);
+      fseek(f, 0L, SEEK_SET);
+      unsigned char *buffer = malloc(fsize);
+      fread(buffer, fsize, 1, f);
+      currbyte = buffer[pos++];
       bitcount = BITS_PER_BYTE;
    }
    bitcount--;
@@ -199,6 +204,7 @@ Node *read_codes (FILE *f) {
       aux->id = c;
       aux->freq = 0;
       aux->left = aux->right = NULL;
+      // printf("%d\n", c);
       return aux;
    }
    Node *aux = (Node*)malloc(sizeof(Node));
@@ -250,44 +256,32 @@ void decode (FILE *input, FILE *output) {
    fread(buffer, fsize, 1, input);
 
    Node *node = read_codes(input);
-   print_node(node);
+   // print_node(node);
    freq_table(node, store, table, 0);
    
-   // int ch = read_bit(input);
-   // Node *aux = node;
-   // char* text = "";
-   // printf("%s\n", table['e']);
-   // while(!feof(input)){
-   //    if(!aux) break;
-   //    if(ch == 0)
-   //       aux = aux->left;
-   //    else
-   //       aux = aux->right;
+   int ch = read_bit(input);
+   Node *aux = node;
+   printf("%s\n", table['e']);
+   while(pos < fsize){
+      if(!aux) break;
+      if(ch == 0)
+         aux = aux->left;
+      else
+         aux = aux->right;
 
-   //    if (!aux->left && !aux->right){
-   //       char c = aux->id;
-   //       strcat(text, &(c));
-   //       //fwrite(text, strlen(text), 1, output);
-   //       printf("%s\n", text);
-   //       aux = node;
-   //    }
-   //    ch = read_bit(input);
-   // }
+      if (!aux->left && !aux->right){
+         char c = aux->id;
+         fwrite(&c, 1, 1, output);
+         //printf("%s\n", text);
+         aux = node;
+      }
+      ch = read_bit(input);
+   }
 
-   printf("%d\n", read_bit(input));
-   printf("%d\n", read_bit(input));
-   printf("%d\n", read_bit(input));
-   printf("%d\n", read_bit(input));
-   printf("%d\n", read_bit(input));
-   printf("%d\n", read_bit(input));
-   printf("%d\n", read_bit(input));
-   printf("%d\n", read_bit(input));
-   printf("%d\n", read_bit(input));
-   printf("%d\n", read_bit(input));
-   printf("%d\n", read_bit(input));
-   printf("%d\n", read_bit(input));
-   printf("%d\n", read_bit(input));
-   printf("%d\n", read_bit(input));
+   // printf("%d\n", read_bit(input));
+   // printf("%d\n", read_bit(input));
+   // printf("%d\n", read_bit(input));
+   // printf("%d\n", read_bit(input));
 
    // for (int i = 0; i < fsize; ++i)
    // {
