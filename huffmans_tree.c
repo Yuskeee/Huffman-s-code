@@ -97,20 +97,13 @@ void count_chars(char *file_name, P_queue *P){
    fread(buffer, fsize, 1, f);
    fclose(f);
    printf("%d\n", fsize);
-   for(int i = 0; i < fsize; i++){
-      printf("%c", buffer[i]);
-   }
+   // for(int i = 0; i < fsize; i++){
+   //    printf("%c", buffer[i]);
+   // }
    int *aux = calloc(ALPHABET, sizeof(int));
    for(int i = 0; i < fsize; i++){
       aux[buffer[i]]++;
    }
-   int sum = 0;
-   for (int i = 0; i < ALPHABET; ++i)
-   {
-      sum += aux[i];
-      //printf("%c: %d\n", i, aux[i]);
-   }
-   printf("%d\n", sum);
    for (int i = 0; i < ALPHABET; ++i){
       if (aux[i] != 0){
          insert_char(P, i, aux[i]);
@@ -131,20 +124,21 @@ Node *create_huff_tree(P_queue *P){
    return(extract_min(P));
 }
 
-void codify(Node *root, int store[], int top){
+void encode(Node *root, int store[], int top){
    if (root->left){
       store[top] = 0;
-      codify(root->left, store, top+1);
+      encode(root->left, store, top+1);
    }
    if (root->right){
       store[top] = 1;
-      codify(root->right, store, top+1);
+      encode(root->right, store, top+1);
    }
    if (!root->left && !root->right){
       printf("%c: ", root->id);
       for (int i = 0; i < top; ++i){
-         printf("%d\n", store[i]);
+         printf("%d", store[i]);
       }
+      printf("\n");
    }
 }
 

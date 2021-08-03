@@ -28,5 +28,6 @@ void insert (P_queue *P, Node *element); //inserts an element
 Node *extract_min (P_queue *P); //returns the smallest element and removes from the queue
 void count_chars(char *file_name, P_queue *P); //fill frequencies of huffman node
 Node *create_huff_tree(P_queue *P); //create huffman tree
+void encode(Node *root, int store[], int top); //encode
 
 #endif
