@@ -171,13 +171,13 @@ int read_bit (FILE *f) {
       bitcount = BITS_PER_BYTE;
    }
    bitcount--;
-   return (currbyte & (1 << bitcount)) >> bitcount;
+   return ((currbyte & (1 << bitcount)) >> bitcount);
 }
 
 char read_char (FILE *f) {
    char c = 0;
    for(int i = 0; i < BITS_PER_BYTE; i++){
-      c += read_bit(f);
+      c += read_bit(f) << (BITS_PER_BYTE - 1 - i);
    }
 }
 
@@ -240,8 +240,8 @@ void encode (FILE *input, FILE *output) {
 }
 
 void decode (FILE *input, FILE *output) {
-   // char store[ALPHABET];
-   // char *table[ALPHABET];
+   char store[ALPHABET];
+   char *table[ALPHABET];
 
    fseek(input, 0L, SEEK_END);
    int fsize = ftell(input);
@@ -249,11 +249,10 @@ void decode (FILE *input, FILE *output) {
    unsigned char *buffer = malloc(fsize);
    fread(buffer, fsize, 1, input);
 
-   // Node *node = read_codes(input);
-   // freq_table(node, store, table, 0);
-
-   // print_node(node);
-
+   Node *node = read_codes(input);
+   print_node(node);
+   freq_table(node, store, table, 0);
+   
    // int ch = read_bit(input);
    // Node *aux = node;
    // char* text = "";
@@ -275,7 +274,6 @@ void decode (FILE *input, FILE *output) {
    //    ch = read_bit(input);
    // }
 
-   printf("%d\n", fgetc(input));
    printf("%d\n", read_bit(input));
    printf("%d\n", read_bit(input));
    printf("%d\n", read_bit(input));
@@ -289,5 +287,11 @@ void decode (FILE *input, FILE *output) {
    printf("%d\n", read_bit(input));
    printf("%d\n", read_bit(input));
    printf("%d\n", read_bit(input));
-}
+   printf("%d\n", read_bit(input));
 
+   // for (int i = 0; i < fsize; ++i)
+   // {
+   //    printf("%d", buffer[i]);
+   //    printf("\n");
+   // }
+}
