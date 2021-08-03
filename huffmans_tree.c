@@ -98,9 +98,9 @@ int count_chars (FILE *f, P_queue *P) {
    unsigned char *buffer = malloc(fsize);
    fread(buffer, fsize, 1, f);
    printf("%d\n", fsize);
-   // for(int i = 0; i < fsize; i++){
-   //    printf("%c", buffer[i]);
-   // }
+   for(int i = 0; i < fsize; i++){
+      printf("%c", buffer[i]);
+   }
    int *aux = calloc(ALPHABET, sizeof(int));
    for(int i = 0; i < fsize; i++){
       aux[buffer[i]]++;
@@ -165,6 +165,12 @@ void write_char (FILE *f, char c) {
    }
 }
 
+void write_int (FILE *f, int num) {
+   for(int i = BITS_PER_BYTE*sizeof(int) - 1; i >= 0; i--){
+      write_bit(f, (num & (1 << i)) >> i);
+   }
+}
+
 int read_bit (FILE *f) {
    if (bitcount == 0){
       fseek(f, 0L, SEEK_END);
@@ -184,6 +190,15 @@ char read_char (FILE *f) {
    for(int i = 0; i < BITS_PER_BYTE; i++){
       c += read_bit(f) << (BITS_PER_BYTE - 1 - i);
    }
+   return c;
+}
+
+int read_int (FILE *f) {
+   unsigned int num = 0;
+   for(int i = 0; i < BITS_PER_BYTE*sizeof(int); i++){
+      num += read_bit(f) << (BITS_PER_BYTE*sizeof(int) - 1 - i);
+   }
+   return num;
 }
 
 void write_codes (FILE *f, Node *root) {
@@ -231,7 +246,7 @@ void encode (FILE *input, FILE *output) {
 
    write_codes(output, node);
 
-   // write_bit(output, n_chars);
+   write_int(output, n_chars);
 
    fseek(input, 0L, SEEK_END);
    fseek(input, 0L, SEEK_SET);
@@ -241,13 +256,22 @@ void encode (FILE *input, FILE *output) {
    for(int i = 0; i < n_chars; i++){
       for(int j = 0; j < strlen(table[buffer[i]]); j++){
          write_bit(output, ((table[buffer[i]][j] == '1') ? 1:0));
+         // printf("%c\n", table[buffer[i]][j]);
       }
    }
+   //if (pos != 0)
+      while(pos < BITS_PER_BYTE){
+         write_bit(output, 0);
+         pos++;
+      }
+
+      // fputc('\0', output);
 }
 
 void decode (FILE *input, FILE *output) {
    char store[ALPHABET];
    char *table[ALPHABET];
+   int counter = 0;
 
    fseek(input, 0L, SEEK_END);
    int fsize = ftell(input);
@@ -256,13 +280,14 @@ void decode (FILE *input, FILE *output) {
    fread(buffer, fsize, 1, input);
 
    Node *node = read_codes(input);
+   int size = read_int(input);
    // print_node(node);
    freq_table(node, store, table, 0);
    
    int ch = read_bit(input);
    Node *aux = node;
-   printf("%s\n", table['e']);
-   while(pos < fsize){
+   printf("%d\n", size);
+   while(counter < size){
       if(!aux) break;
       if(ch == 0)
          aux = aux->left;
@@ -272,8 +297,8 @@ void decode (FILE *input, FILE *output) {
       if (!aux->left && !aux->right){
          char c = aux->id;
          fwrite(&c, 1, 1, output);
-         //printf("%s\n", text);
          aux = node;
+         counter++;
       }
       ch = read_bit(input);
    }

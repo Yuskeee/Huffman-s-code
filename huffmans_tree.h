@@ -33,7 +33,10 @@ Node *create_huff_tree(P_queue *P); //create huffman tree
 void freq_table (Node *root, char store[], char *table[],int top); //fill frequency table
 void write_bit (FILE *f, int bit); //write bit/byte to file
 void write_char (FILE *f, char c); //write char to file
+void write_int (FILE *f, int num);
 int read_bit (FILE *f); //read bit/byte from file
+char read_char (FILE *f);
+int read_int (FILE *f);
 void write_codes (FILE *f, Node *root); //write the codes to file
 Node *read_codes (FILE *f); // read the codes
 void encode (FILE *input, FILE *output); //encode
