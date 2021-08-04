@@ -15,7 +15,7 @@ void swap (P_queue *P, int a, int b) {
    P->V[b] = aux;
 }
 
-void print (P_queue *P) {//apenas para debug
+void print (P_queue *P) { //only for debug
    if(!P) return;
    int i;
    for (i = 0; i < P->size; i++) {
@@ -24,7 +24,7 @@ void print (P_queue *P) {//apenas para debug
    printf("\n");
 }
 
-void print_node (Node* node) {//apenas para debug
+void print_node (Node* node) { //only for debug
    if(node){
       if (!node->left && !node->right)
          printf("1%c", node->id);
@@ -33,6 +33,14 @@ void print_node (Node* node) {//apenas para debug
       print_node(node->left);
       print_node(node->right);
    } 
+}
+
+void erase_nodes (Node* node) {
+   if(node){
+      erase_nodes(node->left);
+      erase_nodes(node->right);
+      free(node);
+   }
 }
 
 void min_heapify (P_queue *P, int i) {
@@ -48,13 +56,6 @@ void min_heapify (P_queue *P, int i) {
       min_heapify(P, smallest);
    }
 }
-
-/*void build_min_heap (P_queue *P) {
-   if(!P) return;
-   for(int i = P->size/2; i >= 0; i--){
-      min_heapify(V, P->size, i);
-   }
-}*/
 
 void insert (P_queue *P, Node *element) {
    if(!P || !element) return;
@@ -98,9 +99,9 @@ int count_chars (FILE *f, P_queue *P) {
    unsigned char *buffer = malloc(fsize);
    fread(buffer, fsize, 1, f);
    printf("%d\n", fsize);
-   for(int i = 0; i < fsize; i++){
-      printf("%c", buffer[i]);
-   }
+   // for(int i = 0; i < fsize; i++){
+   //    printf("%c", buffer[i]);
+   // }
    int *aux = calloc(ALPHABET, sizeof(int));
    for(int i = 0; i < fsize; i++){
       aux[buffer[i]]++;
@@ -114,6 +115,7 @@ int count_chars (FILE *f, P_queue *P) {
 }
 
 Node *create_huff_tree (P_queue *P) {
+   if(!P) return NULL;
    while(P->size != 1){
       Node *left = extract_min(P), *right = extract_min(P);
       Node *top = (Node*)malloc(sizeof(Node));
@@ -152,7 +154,7 @@ void write_bit (FILE *f, int bit) {
    if(bit == 1) currbyte |= 1;
    bitcount++;
    if (bitcount == BITS_PER_BYTE){
-      printf("%d\n", currbyte);
+      // printf("%d\n", currbyte);
       fputc(currbyte, f);
       currbyte = 0;
       bitcount = 0;
@@ -171,13 +173,8 @@ void write_int (FILE *f, int num) {
    }
 }
 
-int read_bit (FILE *f) {
+int read_bit (char *buffer) {
    if (bitcount == 0){
-      fseek(f, 0L, SEEK_END);
-      int fsize = ftell(f);
-      fseek(f, 0L, SEEK_SET);
-      unsigned char *buffer = malloc(fsize);
-      fread(buffer, fsize, 1, f);
       currbyte = buffer[pos++];
       bitcount = BITS_PER_BYTE;
    }
@@ -185,18 +182,18 @@ int read_bit (FILE *f) {
    return ((currbyte & (1 << bitcount)) >> bitcount);
 }
 
-char read_char (FILE *f) {
+char read_char (char *buffer) {
    char c = 0;
    for(int i = 0; i < BITS_PER_BYTE; i++){
-      c += read_bit(f) << (BITS_PER_BYTE - 1 - i);
+      c += read_bit(buffer) << (BITS_PER_BYTE - 1 - i);
    }
    return c;
 }
 
-int read_int (FILE *f) {
+int read_int (char *buffer) {
    unsigned int num = 0;
    for(int i = 0; i < BITS_PER_BYTE*sizeof(int); i++){
-      num += read_bit(f) << (BITS_PER_BYTE*sizeof(int) - 1 - i);
+      num += read_bit(buffer) << (BITS_PER_BYTE*sizeof(int) - 1 - i);
    }
    return num;
 }
@@ -212,9 +209,9 @@ void write_codes (FILE *f, Node *root) {
    write_codes(f, root->right);
 }
 
-Node *read_codes (FILE *f) {
-   if (read_bit(f)){
-      char c = read_char(f);
+Node *read_codes (char *buffer) {
+   if (read_bit(buffer)){
+      char c = read_char(buffer);
       Node *aux = (Node*)malloc(sizeof(Node));
       aux->id = c;
       aux->freq = 0;
@@ -225,8 +222,8 @@ Node *read_codes (FILE *f) {
    Node *aux = (Node*)malloc(sizeof(Node));
    aux->id = '\0';
    aux->freq = 0;
-   aux->left = read_codes(f);
-   aux->right = read_codes(f);
+   aux->left = read_codes(buffer);
+   aux->right = read_codes(buffer);
    return aux;
 }
 
@@ -241,8 +238,8 @@ void encode (FILE *input, FILE *output) {
    Node *node = create_huff_tree(&P);
    freq_table(node, store, table, 0);
 
-   print_node(node);
-   printf("\n");
+   // print_node(node);
+   // printf("\n");
 
    write_codes(output, node);
 
@@ -266,6 +263,9 @@ void encode (FILE *input, FILE *output) {
       }
 
       // fputc('\0', output);
+
+   free(buffer);
+   erase_nodes(node);
 }
 
 void decode (FILE *input, FILE *output) {
@@ -279,12 +279,12 @@ void decode (FILE *input, FILE *output) {
    unsigned char *buffer = malloc(fsize);
    fread(buffer, fsize, 1, input);
 
-   Node *node = read_codes(input);
-   int size = read_int(input);
+   Node *node = read_codes(buffer);
+   int size = read_int(buffer);
    // print_node(node);
    freq_table(node, store, table, 0);
    
-   int ch = read_bit(input);
+   int ch = read_bit(buffer);
    Node *aux = node;
    printf("%d\n", size);
    while(counter < size){
@@ -300,11 +300,14 @@ void decode (FILE *input, FILE *output) {
          aux = node;
          counter++;
       }
-      ch = read_bit(input);
+      ch = read_bit(buffer);
    }
    // for (int i = 0; i < fsize; ++i)
    // {
    //    printf("%d", buffer[i]);
    //    printf("\n");
    // }
+
+   free(buffer);
+   erase_nodes(node);
 }
