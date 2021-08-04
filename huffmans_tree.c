@@ -302,12 +302,6 @@ void decode (FILE *input, FILE *output) {
       }
       ch = read_bit(input);
    }
-
-   // printf("%d\n", read_bit(input));
-   // printf("%d\n", read_bit(input));
-   // printf("%d\n", read_bit(input));
-   // printf("%d\n", read_bit(input));
-
    // for (int i = 0; i < fsize; ++i)
    // {
    //    printf("%d", buffer[i]);
