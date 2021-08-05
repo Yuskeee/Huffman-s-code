@@ -15,7 +15,7 @@ void swap (P_queue *P, int a, int b) {
    P->V[b] = aux;
 }
 
-void print (P_queue *P) { //only for debug
+void print_queue (P_queue *P) { //only for debug
    if(!P) return;
    int i;
    for (i = 0; i < P->size; i++) {
@@ -91,14 +91,7 @@ void insert_char (P_queue *P, char id, int freq) {
    insert(P, new_node);
 }
 
-int count_chars (FILE *f, P_queue *P) {
-   // Read the file into a memory buffer
-   fseek(f, 0L, SEEK_END);
-   int fsize = ftell(f);
-   fseek(f, 0L, SEEK_SET);
-   unsigned char *buffer = malloc(fsize);
-   fread(buffer, fsize, 1, f);
-   printf("%d\n", fsize);
+void count_chars (char *buffer, int fsize, P_queue *P) {
    // for(int i = 0; i < fsize; i++){
    //    printf("%c", buffer[i]);
    // }
@@ -111,7 +104,6 @@ int count_chars (FILE *f, P_queue *P) {
          insert_char(P, i, aux[i]);
       }
    }
-   return fsize;
 }
 
 Node *create_huff_tree (P_queue *P) {
@@ -139,17 +131,14 @@ void freq_table (Node *root, char store[], char *table[],int top) {
    }
    if (!root->left && !root->right){
       store[top] = '\0';
-      // printf("%c:", root->id);
-      // printf("%s", store);
       table[root->id] = strdup(store);
-      // printf(" ");
    }
 }
 
 /*Global Variables to write/read bits*/
 int currbyte = 0, bitcount = 0, pos = 0;
 
-void write_bit (FILE *f, int bit) {
+void write_bit (FILE *f, int bit) { //writes 8 bits onto a file when a byte is completed 
    currbyte = currbyte << 1;
    if(bit == 1) currbyte |= 1;
    bitcount++;
@@ -161,19 +150,19 @@ void write_bit (FILE *f, int bit) {
    }
 }
 
-void write_char (FILE *f, char c) {
+void write_char (FILE *f, char c) { //reads 1 byte
    for(int i = BITS_PER_BYTE - 1; i >= 0; i--){
       write_bit(f, (c & (1 << i)) >> i);
    }
 }
 
-void write_int (FILE *f, int num) {
+void write_int (FILE *f, int num) { //reads 4 bytes
    for(int i = BITS_PER_BYTE*sizeof(int) - 1; i >= 0; i--){
       write_bit(f, (num & (1 << i)) >> i);
    }
 }
 
-int read_bit (char *buffer) {
+int read_bit (char *buffer) { //reads a byte when no bit is left and returns a bit
    if (bitcount == 0){
       currbyte = buffer[pos++];
       bitcount = BITS_PER_BYTE;
@@ -182,7 +171,7 @@ int read_bit (char *buffer) {
    return ((currbyte & (1 << bitcount)) >> bitcount);
 }
 
-char read_char (char *buffer) {
+char read_char (char *buffer) { //reads 1 byte
    char c = 0;
    for(int i = 0; i < BITS_PER_BYTE; i++){
       c += read_bit(buffer) << (BITS_PER_BYTE - 1 - i);
@@ -190,7 +179,7 @@ char read_char (char *buffer) {
    return c;
 }
 
-int read_int (char *buffer) {
+int read_int (char *buffer) { //read 4 bytes
    unsigned int num = 0;
    for(int i = 0; i < BITS_PER_BYTE*sizeof(int); i++){
       num += read_bit(buffer) << (BITS_PER_BYTE*sizeof(int) - 1 - i);
@@ -231,10 +220,18 @@ void encode (FILE *input, FILE *output) {
    char store[ALPHABET];
    char *table[ALPHABET];
 
+   //Read the file into a memory buffer
+   fseek(input, 0L, SEEK_END);
+   int fsize = ftell(input);
+   fseek(input, 0L, SEEK_SET);
+   unsigned char *buffer = malloc(fsize);
+   fread(buffer, fsize, 1, input);
+   printf("%d\n", fsize);
+
    P_queue P;
    new_pqueue(&P);
-   int n_chars = count_chars(input, &P);
-   // print(&P);
+   count_chars(buffer, fsize, &P);
+   // print_queue(&P);
    Node *node = create_huff_tree(&P);
    freq_table(node, store, table, 0);
 
@@ -242,37 +239,28 @@ void encode (FILE *input, FILE *output) {
    // printf("\n");
 
    write_codes(output, node);
+   write_int(output, fsize); //write the total number of characters
 
-   write_int(output, n_chars);
-
-   fseek(input, 0L, SEEK_END);
-   fseek(input, 0L, SEEK_SET);
-   unsigned char *buffer = malloc(n_chars);
-   fread(buffer, n_chars, 1, input);
-
-   for(int i = 0; i < n_chars; i++){
+   for(int i = 0; i < fsize; i++){
       for(int j = 0; j < strlen(table[buffer[i]]); j++){
-         write_bit(output, ((table[buffer[i]][j] == '1') ? 1:0));
+         write_bit(output, ((table[buffer[i]][j] == '1') ? 1:0)); //write every bit onto the output file
          // printf("%c\n", table[buffer[i]][j]);
       }
    }
-   //if (pos != 0)
-      while(pos < BITS_PER_BYTE){
-         write_bit(output, 0);
-         pos++;
-      }
 
-      // fputc('\0', output);
+   while(pos < BITS_PER_BYTE){ //in case some bits do not sum up to a byte
+      write_bit(output, 0); //fill the rest of the byte
+      pos++;
+   }
 
    free(buffer);
    erase_nodes(node);
 }
 
 void decode (FILE *input, FILE *output) {
-   char store[ALPHABET];
-   char *table[ALPHABET];
    int counter = 0;
 
+   //Read the file into a memory buffer
    fseek(input, 0L, SEEK_END);
    int fsize = ftell(input);
    fseek(input, 0L, SEEK_SET);
@@ -280,14 +268,13 @@ void decode (FILE *input, FILE *output) {
    fread(buffer, fsize, 1, input);
 
    Node *node = read_codes(buffer);
-   int size = read_int(buffer);
+   int size = read_int(buffer); //reads the total number of characters
+   printf("%d\n", size);
    // print_node(node);
-   freq_table(node, store, table, 0);
    
    int ch = read_bit(buffer);
    Node *aux = node;
-   printf("%d\n", size);
-   while(counter < size){
+   while(counter < size){ //until all characters in the original file are written
       if(!aux) break;
       if(ch == 0)
          aux = aux->left;
@@ -296,17 +283,12 @@ void decode (FILE *input, FILE *output) {
 
       if (!aux->left && !aux->right){
          char c = aux->id;
-         fwrite(&c, 1, 1, output);
+         fwrite(&c, 1, 1, output); //write the identified character
          aux = node;
-         counter++;
+         counter++; // +1 character
       }
       ch = read_bit(buffer);
    }
-   // for (int i = 0; i < fsize; ++i)
-   // {
-   //    printf("%d", buffer[i]);
-   //    printf("\n");
-   // }
 
    free(buffer);
    erase_nodes(node);
