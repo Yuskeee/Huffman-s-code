@@ -26,6 +26,7 @@ void print_queue (P_queue *P) { //only for debug
 
 void print_node (Node* node) { //only for debug
    if(node){
+      printf("%c:%d  ", node->id, node->freq);
       if (!node->left && !node->right)
          printf("1%c", node->id);
       else
@@ -88,6 +89,8 @@ void insert_char (P_queue *P, char id, int freq) {
    Node *new_node = (Node*)malloc(sizeof(Node));
    new_node->id = id;
    new_node->freq = freq;
+   new_node->left = NULL;
+   new_node->right = NULL;
    insert(P, new_node);
 }
 
@@ -114,6 +117,7 @@ Node *create_huff_tree (P_queue *P) {
       top->freq = left->freq + right->freq;
       top->left = left;
       top->right = right;
+      // printf("left: %c:%d  right: %c:%d  top: %c:%d\n", left->id, left->freq, right->id, right->freq, top->id, top->freq);
       insert(P, top);
    }
    return(extract_min(P));
@@ -123,14 +127,17 @@ void freq_table (Node *root, char store[], char *table[],int top) {
    if(!root) return;
    if (root->left){
       store[top] = '0';
+      printf("0");
       freq_table(root->left, store, table, top+1);
    }
    if (root->right){
       store[top] = '1';
+      printf("1");
       freq_table(root->right, store, table, top+1);
    }
    if (!root->left && !root->right){
       store[top] = '\0';
+      printf(":%c", root->id);
       table[root->id] = strdup(store);
    }
 }
